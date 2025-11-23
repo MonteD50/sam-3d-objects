@@ -57,6 +57,20 @@ RUN pip install fastapi uvicorn python-multipart
 # Run the patching script
 RUN chmod +x ./patching/hydra && ./patching/hydra .
 
+RUN pip install 'huggingface-hub[cli]<1.0'
+ARG HF_TOKEN
+RUN TAG=hf && \
+    # Authenticate via environment variable for this command only
+    HF_TOKEN=${HF_TOKEN} hf download \
+    --repo-type model \
+    --local-dir checkpoints/${TAG}-download \
+    --max-workers 1 \
+    facebook/sam-3d-objects && \
+    # Move the nested checkpoints folder to the expected location
+    mv checkpoints/${TAG}-download/checkpoints checkpoints/${TAG} && \
+    # Cleanup the download folder
+    rm -rf checkpoints/${TAG}-download
+
 # 9. Expose Port and Run
 EXPOSE 8000
 
